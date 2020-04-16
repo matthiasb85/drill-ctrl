@@ -8,7 +8,7 @@ export $(shell sed 's/=.*//' env_vars)
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16 -DUSE_MAPLEMINI_BOOTLOADER=${USE_MAPLEMINI_BOOTLOADER}
+  USE_OPT = -O0 -ggdb -fomit-frame-pointer -falign-functions=16 -DUSE_MAPLEMINI_BOOTLOADER=${USE_MAPLEMINI_BOOTLOADER}
 endif
 
 # C specific options here (added to USE_OPT).
@@ -93,7 +93,7 @@ MCU  = cortex-m3
 
 # Imported source files and paths.
 CHIBIOS  := ./.3rdparty/ChibiOS_$(OS_VERSION)
-CONFDIR  := ./cfg
+CONFDIR  := ./inc/ch
 BUILDDIR := ./build
 DEPDIR   := ./.dep
 
@@ -126,7 +126,9 @@ endif
 # setting.
 CSRC = $(ALLCSRC) \
        src/main.c \
-       src/usbcfg.c 
+       src/ch/usb_cfg.c \
+       src/ui/inc_enc.c \
+       
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -139,7 +141,7 @@ ASMSRC = $(ALLASMSRC)
 ASMXSRC = $(ALLXASMSRC)
 
 # Inclusion directories.
-INCDIR = $(CONFDIR) $(ALLINC)
+INCDIR = $(CONFDIR) $(ALLINC) inc
 
 # Define C warning options here.
 CWARN = -Wall -Wextra -Wundef -Wstrict-prototypes
