@@ -14,16 +14,36 @@
     limitations under the License.
 */
 
+/*
+ * ChibiOS specific includes
+ */
 #include <stdio.h>
 #include <string.h>
-
 #include "ch.h"
 #include "hal.h"
-
 #include "shell.h"
 #include "chprintf.h"
+#include "ch/usb_cfg.h"
 
-#include "usbcfg.h"
+/*
+ * Project specific API includes
+ */
+#include "app/drill_ctrl.h"
+#include "output/esc_pwm.h"
+#include "sensors/pwr_sup.h"
+#include "sensors/rev_cnt.h"
+#include "ui/glcd.h"
+#include "ui/inc_enc.h"
+
+/*
+ * Project specific shell command includes
+ */
+#include "app/drill_ctrl_cmd.h"
+#include "output/esc_pwm_cmd.h"
+#include "sensors/pwr_sup_cmd.h"
+#include "sensors/rev_cnt_cmd.h"
+#include "ui/glcd_cmd.h"
+#include "ui/inc_enc_cmd.h"
 
 /*===========================================================================*/
 /* Command line related.                                                     */
@@ -31,76 +51,41 @@
 
 #define SHELL_WA_SIZE   THD_WORKING_AREA_SIZE(2048)
 
-/* Can be measured using dd if=/dev/xxxx of=/dev/null bs=512 count=10000.*/
-static void cmd_write(BaseSequentialStream *chp, int argc, char *argv[]) {
-  static uint8_t buf[] =
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-
-  (void)argv;
-  if (argc > 0) {
-    chprintf(chp, "Usage: write\r\n");
-    return;
-  }
-
-  while (chnGetTimeout((BaseChannel *)chp, TIME_IMMEDIATE) == Q_TIMEOUT) {
-#if 1
-    /* Writing in channel mode.*/
-    chnWrite(&SDU1, buf, sizeof buf - 1);
-#else
-    /* Writing in buffer mode.*/
-    (void) obqGetEmptyBufferTimeout(&SDU1.obqueue, TIME_INFINITE);
-    memcpy(SDU1.obqueue.ptr, buf, SERIAL_USB_BUFFERS_SIZE);
-    obqPostFullBuffer(&SDU1.obqueue, SERIAL_USB_BUFFERS_SIZE);
-#endif
-  }
-  chprintf(chp, "\r\n\nstopped\r\n");
-}
-
 static const ShellCommand commands[] = {
-  {"write", cmd_write},
+  DRILL_CTRL_CMD_LIST
+  ESC_PWM_CMD_LIST
+  PWR_SUP_CMD_LIST
+  REV_CNT_CMD_LIST
+  GLCD_CMD_LIST
+  INC_ENC_CMD_LIST
   {NULL, NULL}
 };
 
-static const ShellConfig shell_cfg1 = {
+static const ShellConfig shell_cfg = {
   (BaseSequentialStream *)&SDU1,
   commands
 };
 
-/*===========================================================================*/
-/* Generic code.                                                             */
-/*===========================================================================*/
-
-/*
- * Blinker thread, times are in milliseconds.
- */
-static THD_WORKING_AREA(waThread1, 128);
-static __attribute__((noreturn)) THD_FUNCTION(Thread1, arg) {
-
-  (void)arg;
-  chRegSetThreadName("blinker");
-  while (true) {
-    systime_t time = serusbcfg.usbp->state == USB_ACTIVE ? 250 : 500;
-    palClearPad(GPIOB, GPIOB_LED);
-    chThdSleepMilliseconds(time);
-    palSetPad(GPIOB, GPIOB_LED);
-    chThdSleepMilliseconds(time);
-  }
-}
+///*===========================================================================*/
+///* Generic code.                                                             */
+///*===========================================================================*/
+//
+///*
+// * Blinker thread, times are in milliseconds.
+// */
+//static THD_WORKING_AREA(waThread1, 128);
+//static __attribute__((noreturn)) THD_FUNCTION(Thread1, arg) {
+//
+//  (void)arg;
+//  chRegSetThreadName("blinker");
+//  while (true) {
+//    systime_t time = serusbcfg.usbp->state == USB_ACTIVE ? 250 : 500;
+//    palClearPad(GPIOB, GPIOB_LED);
+//    chThdSleepMilliseconds(time);
+//    palSetPad(GPIOB, GPIOB_LED);
+//    chThdSleepMilliseconds(time);
+//  }
+//}
 
 /*
  * Application entry point.
@@ -138,10 +123,24 @@ int main(void) {
    */
   shellInit();
 
+//  /*
+//   * Creates the blinker thread.
+//   */
+//  chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
+
   /*
-   * Creates the blinker thread.
+   * Project specific driver initialization
    */
-  chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
+//  esc_pwm_init();
+//  pwr_sup_init();
+//  rev_cnt_init();
+//  glcd_init();
+  inc_enc_init();
+
+  /*
+   * Project specific application initialization
+   */
+//  drill_ctrl_init();
 
   /*
    * Normal main() thread activity, spawning shells.
@@ -150,9 +149,12 @@ int main(void) {
     if (SDU1.config->usbp->state == USB_ACTIVE) {
       thread_t *shelltp = chThdCreateFromHeap(NULL, SHELL_WA_SIZE,
                                               "shell", NORMALPRIO + 1,
-                                              shellThread, (void *)&shell_cfg1);
+                                              shellThread, (void *)&shell_cfg);
       chThdWait(shelltp);               /* Waiting termination.             */
     }
     chThdSleepMilliseconds(1000);
   }
+  /*
+   * HIC SVNT DRACONES
+   */
 }

@@ -31,7 +31,7 @@
 #define _CHIBIOS_HAL_CONF_
 #define _CHIBIOS_HAL_CONF_VER_7_1_
 
-#include "mcuconf.h"
+#include "../ch/mcuconf.h"
 
 /**
  * @brief   Enables the PAL subsystem.
@@ -210,7 +210,7 @@
  * @note    Disabling this option saves both code and data space.
  */
 #if !defined(PAL_USE_CALLBACKS) || defined(__DOXYGEN__)
-#define PAL_USE_CALLBACKS                   FALSE
+#define PAL_USE_CALLBACKS                   TRUE
 #endif
 
 /**
