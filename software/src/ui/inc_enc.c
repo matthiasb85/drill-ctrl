@@ -47,9 +47,6 @@ static void             _inc_enc_debounce       (void *arg);
 static void             _inc_enc_cb_btn         (void *arg);
 static void             _inc_enc_cb_rot         (void *arg);
 
-extern SerialUSBDriver SDU1;
-
-
 /*
  * Static helper functions
  */
