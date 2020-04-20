@@ -133,7 +133,7 @@ int main(void) {
    */
 //  esc_pwm_init();
 //  pwr_sup_init();
-//  rev_cnt_init();
+  rev_cnt_init();
 //  glcd_init();
   inc_enc_init();
 

@@ -24,13 +24,6 @@
  */
 
 /*
- * Static variables
- */
-static inc_enc_rot_state_t      _inc_enc_rot_state = INC_ENC_FSM_INIT;
-static virtual_timer_t          _inc_enc_debounce_vtp;
-static virtual_timer_t          _inc_enc_timeout_vtp;
-
-/*
  * Global variables
  */
 event_source_t                  inc_enc_events_src[INC_ENC_EVENT_MAX];
@@ -46,6 +39,13 @@ static void             _inc_enc_timeout        (void *arg);
 static void             _inc_enc_debounce       (void *arg);
 static void             _inc_enc_cb_btn         (void *arg);
 static void             _inc_enc_cb_rot         (void *arg);
+
+/*
+ * Static variables
+ */
+static inc_enc_rot_state_t      _inc_enc_rot_state = INC_ENC_FSM_INIT;
+static virtual_timer_t          _inc_enc_debounce_vtp;
+static virtual_timer_t          _inc_enc_timeout_vtp;
 
 /*
  * Static helper functions

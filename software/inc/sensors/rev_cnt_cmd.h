@@ -12,12 +12,13 @@
  * Global definition of shell commands
  * for module rev_cnt
  */
-//extern void rev_cnt_read_input(BaseSequentialStream *chp, int argc, char *argv[]);
+extern void rev_cnt_read_input(BaseSequentialStream *chp, int argc, char *argv[]);
 
 /*
  * Shell command list
  * for module rev_cnt
  */
 #define REV_CNT_CMD_LIST \
+    {"revolution_read", rev_cnt_read_input}, \
 
 #endif /* INC_SENSORS_REV_CNT_CMD_H_ */

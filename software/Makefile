@@ -127,6 +127,7 @@ endif
 CSRC = $(ALLCSRC) \
        src/main.c \
        src/ch/usb_cfg.c \
+       src/sensors/rev_cnt.c \
        src/ui/inc_enc.c \
        
 
