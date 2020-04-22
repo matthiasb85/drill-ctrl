@@ -55,7 +55,7 @@ static icucnt_t _rev_cnt_last_dT = 0;
  */
 static void _rev_cnt_init_hal(void)
 {
-  palSetLineMode(REV_CNT_INPUT_LINE, PAL_MODE_INPUT_PULLDOWN);
+  palSetLineMode(REV_CNT_INPUT_LINE, REV_CNT_INPUT_MODE);
   icuStart(REV_CNT_ICUD, &_rev_cnt_icu_cfg);
   icuStartCapture(REV_CNT_ICUD);
   icuEnableNotifications(REV_CNT_ICUD);
@@ -98,7 +98,7 @@ static void _rev_cnt_overflow_cb(ICUDriver *icup)
  * Shell functions
  */
 
-void rev_cnt_read_input(BaseSequentialStream *chp, int argc, char *argv[]) {
+void esc_pwn_read_output(BaseSequentialStream *chp, int argc, char *argv[]) {
   (void)argv;
   if (argc > 0) {
     chprintf(chp, "Usage: revolution_read\r\n");
