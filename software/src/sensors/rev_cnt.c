@@ -30,10 +30,11 @@
 /*
  * Forward declarations of static functions
  */
-static void _rev_cnt_init_hal(void);
-static void _rev_cnt_init_module(void);
-static uint32_t _rev_get_dT(void);
-static void _rev_cnt_period_cb(ICUDriver *icup);
+static void             _rev_cnt_init_hal       (void);
+static void             _rev_cnt_init_module    (void);
+static uint32_t         _rev_get_dT             (void);
+static void             _rev_cnt_period_cb      (ICUDriver *icup);
+static void             _rev_cnt_overflow_cb    (ICUDriver *icup);
 
 /*
  * Static variables
@@ -43,8 +44,8 @@ static ICUConfig _rev_cnt_icu_cfg = {
     REV_CNT_TIMER_FREQ,
     NULL,
     _rev_cnt_period_cb,
-    NULL,
-    ICU_CHANNEL_1,
+    _rev_cnt_overflow_cb,
+    REV_CNT_ICUD_CH,
     0
   };
 static icucnt_t _rev_cnt_last_dT = 0;
@@ -54,14 +55,17 @@ static icucnt_t _rev_cnt_last_dT = 0;
  */
 static void _rev_cnt_init_hal(void)
 {
-  icuStart(&ICUD1, &_rev_cnt_icu_cfg);
-  icuStartCapture(&ICUD1);
-  icuEnableNotifications(&ICUD1);
+  palSetLineMode(REV_CNT_INPUT_LINE, PAL_MODE_INPUT_PULLDOWN);
+  icuStart(REV_CNT_ICUD, &_rev_cnt_icu_cfg);
+  icuStartCapture(REV_CNT_ICUD);
+  icuEnableNotifications(REV_CNT_ICUD);
 }
 
 static void _rev_cnt_init_module(void)
 {
-
+  /*
+   * Not needed for this module
+   */
 }
 
 static uint32_t _rev_get_dT(void)
@@ -82,6 +86,13 @@ static void _rev_cnt_period_cb(ICUDriver *icup)
   chSysUnlockFromISR();
 }
 
+static void _rev_cnt_overflow_cb(ICUDriver *icup)
+{
+  (void)icup;
+  chSysLockFromISR();
+  _rev_cnt_last_dT = 0;
+  chSysUnlockFromISR();
+}
 
 /*
  * Shell functions
