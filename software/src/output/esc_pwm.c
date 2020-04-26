@@ -91,12 +91,13 @@ void esc_pwm_read_output(BaseSequentialStream *chp, int argc, char *argv[]) {
     return;
   }
 
-  chprintf(chp, "        %% |      Raw\r\n");
-  chprintf(chp, "--------------------\r\n");
+  chprintf(chp, "        %% |      Int |      Raw\r\n");
+  chprintf(chp, "-------------------------------\r\n");
   while (chnGetTimeout((BaseChannel *)chp, TIME_IMMEDIATE) == Q_TIMEOUT)
   {
-      uint32_t percent = ESC_PWM_TICKS_TO_PER(_esc_pwm_duty_cycle);
-      chprintf(chp, " %8d | %8d\r", percent, _esc_pwm_duty_cycle);
+      uint32_t percent = ESC_PWM_TICKS_TO_PER(ESC_PWM_INT_TO_TICKS(_esc_pwm_duty_cycle));
+      uint32_t raw     = ESC_PWM_MIN_DUTY_TICKS + ESC_PWM_INT_TO_TICKS(_esc_pwm_duty_cycle);
+      chprintf(chp, " %8d | %8d | %8d\r", percent, _esc_pwm_duty_cycle, raw);
       chThdSleepMilliseconds(100);
   }
   chprintf(chp, "\r\n\nstopped\r\n");
