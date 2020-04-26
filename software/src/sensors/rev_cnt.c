@@ -98,7 +98,7 @@ static void _rev_cnt_overflow_cb(ICUDriver *icup)
  * Shell functions
  */
 
-void esc_pwn_read_output(BaseSequentialStream *chp, int argc, char *argv[]) {
+void rev_cnt_read_input(BaseSequentialStream *chp, int argc, char *argv[]) {
   (void)argv;
   if (argc > 0) {
     chprintf(chp, "Usage: revolution_read\r\n");

@@ -12,7 +12,7 @@
  * Global definition of shell commands
  * for module rev_cnt
  */
-extern void esc_pwn_read_output(BaseSequentialStream *chp, int argc, char *argv[]);
+extern void rev_cnt_read_input(BaseSequentialStream *chp, int argc, char *argv[]);
 
 /*
  * Shell command list
