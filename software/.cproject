@@ -93,7 +93,15 @@
                             							
                             <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.1300450447" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
                             							
-                            <builder arguments="-j 8" buildPath="${workspace_loc:/drill-ctrl}" command="make" id="ilg.gnuarmeclipse.managedbuild.cross.builder.550721548" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
+                            <builder arguments="-j 8" buildPath="${workspace_loc:/drill-ctrl}" command="make" id="ilg.gnuarmeclipse.managedbuild.cross.builder.550721548" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder">
+                                								
+                                <outputEntries>
+                                    									
+                                    <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name=""/>
+                                    								
+                                </outputEntries>
+                                							
+                            </builder>
                             							
                             <tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1966210982" name="GNU ARM Cross Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
                                 								
@@ -144,6 +152,8 @@
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/drill-ctrl/drill-ctrl/inc}&quot;"/>
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/drill-ctrl/drill-ctrl/.3rdparty/ChibiOS_20.3.0/os}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/drill-ctrl/drill-ctrl/.3rdparty/u8g2/csrc}&quot;"/>
                                     								
                                 </option>
                                 								
