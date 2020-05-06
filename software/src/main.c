@@ -66,27 +66,6 @@ static const ShellConfig shell_cfg = {
   commands
 };
 
-///*===========================================================================*/
-///* Generic code.                                                             */
-///*===========================================================================*/
-//
-///*
-// * Blinker thread, times are in milliseconds.
-// */
-//static THD_WORKING_AREA(waThread1, 128);
-//static __attribute__((noreturn)) THD_FUNCTION(Thread1, arg) {
-//
-//  (void)arg;
-//  chRegSetThreadName("blinker");
-//  while (true) {
-//    systime_t time = serusbcfg.usbp->state == USB_ACTIVE ? 250 : 500;
-//    palClearPad(GPIOB, GPIOB_LED);
-//    chThdSleepMilliseconds(time);
-//    palSetPad(GPIOB, GPIOB_LED);
-//    chThdSleepMilliseconds(time);
-//  }
-//}
-
 /*
  * Application entry point.
  */
@@ -123,18 +102,13 @@ int main(void) {
    */
   shellInit();
 
-//  /*
-//   * Creates the blinker thread.
-//   */
-//  chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
-
   /*
    * Project specific driver initialization
    */
   esc_pwm_init();
 //  pwr_sup_init();
   rev_cnt_init();
-//  glcd_init();
+  glcd_init();
   inc_enc_init();
 
   /*

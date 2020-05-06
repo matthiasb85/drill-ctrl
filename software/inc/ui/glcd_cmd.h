@@ -12,12 +12,13 @@
  * Global definition of shell commands
  * for module glcd
  */
-//extern void glcd_debug(BaseSequentialStream *chp, int argc, char *argv[]);
+extern void glcd_set_backlight(BaseSequentialStream *chp, int argc, char *argv[]);
 
 /*
  * Shell command list
  * for module glcd
  */
 #define GLCD_CMD_LIST \
+	    {"glcd_backlight", glcd_set_backlight}, \
 
 #endif /* INC_UI_GLCD_CMD_H_ */
