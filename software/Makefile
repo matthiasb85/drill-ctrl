@@ -8,7 +8,7 @@ export $(shell sed 's/=.*//' env_vars)
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -O0 -ggdb -fomit-frame-pointer -falign-functions=16 -DUSE_MAPLEMINI_BOOTLOADER=${USE_MAPLEMINI_BOOTLOADER}
+  USE_OPT = -O0 -ggdb -fomit-frame-pointer -falign-functions=16 
 endif
 
 # C specific options here (added to USE_OPT).
@@ -220,11 +220,16 @@ U8G2_SRC = \
 CSRC = $(ALLCSRC) \
        ${U8G2_SRC} \
        src/main.c \
+       src/app/drill_ctrl.c \
+       src/app/usb_shell.c \
+       src/app/ctrl_loop.c \
+       src/app/menu.c \
        src/ch/usb_cfg.c \
        src/output/esc_pwm.c \
        src/sensors/rev_cnt.c \
        src/ui/glcd.c \
        src/ui/inc_enc.c \
+       src/ui/ui.c \
        
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global

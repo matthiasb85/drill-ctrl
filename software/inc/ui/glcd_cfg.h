@@ -17,7 +17,7 @@
 #define GLCD_PWM_TIMER_DRIVER    (&PWMD4)
 #define GLCD_PWM_TIMER_CH        1
 #define GLCD_PWM_TIMER_FREQ      1000000               	 // 1MHz timer speed
-#define GLCD_PWM_TIMER_PERIOD_US 100                     // 100us period
+#define GLCD_PWM_TIMER_P_US      100                     // 100us period
 #define GLCD_PWM_DEFAULT         25
 
 
@@ -27,5 +27,10 @@
 
 #define GLCD_UPDATE_THREAD_PRIO  128
 #define GLCD_UPDATE_THREAD_STACK 2048
+#define GLCD_UPDATE_THREAD_P_MS  20
+
+
+#define GLCD_UI_KEY_LENGTH       20
+#define GLCD_UI_VAL_LENGTH       20
 
 #endif /* INC_UI_GLCD_CFG_H_ */
