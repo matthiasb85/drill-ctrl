@@ -71,10 +71,11 @@ static const SPIConfig _glcd_spid_cfg = {
 
 static THD_WORKING_AREA(_glcd_update_stack, GLCD_UPDATE_THREAD_STACK);
 
-static u8g2_t                   _glcd_u8g2;
+static u8g2_t              _glcd_u8g2;
 static ui_object_state_t   _glcd_screen_state = UI_STATE_DIRTY;
 static ui_object_t *       _glcd_current_object_list = NULL;
-
+static uint8_t             _glcd_msg_buffer[2148];
+static uint16_t            _glcd_msg_buffer_idx = 0;
 /*
  * Tasks
  */
@@ -86,8 +87,11 @@ static __attribute__((noreturn)) THD_FUNCTION(_glcd_update_thread, arg)
   chRegSetThreadName("glcd_update");
   chThdSleepMilliseconds(GLCD_UPDATE_THREAD_P_MS);
 
+  palSetLineMode(PAL_LINE(GPIOA, 9U),PAL_MODE_OUTPUT_PUSHPULL);
+
   while (true)
   {
+    palSetLine(PAL_LINE(GPIOA, 9U));
     systime_t time = chVTGetSystemTimeX();
 
     if(_glcd_process_objects())
@@ -96,7 +100,7 @@ static __attribute__((noreturn)) THD_FUNCTION(_glcd_update_thread, arg)
       u8g2_SendBuffer(&_glcd_u8g2);
       spiReleaseBus(GLCD_SPI_DRIVER);
     }
-
+    palClearLine(PAL_LINE(GPIOA, 9U));
     chThdSleepUntilWindowed(time, time + TIME_MS2I(GLCD_UPDATE_THREAD_P_MS));
   }
 }
@@ -281,33 +285,44 @@ static uint8_t _glcd_u8g2_hw_spi(U8X8_UNUSED u8x8_t *u8x8, uint8_t msg, uint8_t 
   switch(msg)
   {
     case U8X8_MSG_BYTE_SEND:
-      spiSend(GLCD_SPI_DRIVER, arg_int, arg_ptr);
+      memcpy(&_glcd_msg_buffer[_glcd_msg_buffer_idx], arg_ptr, arg_int);
+      _glcd_msg_buffer_idx += arg_int;
       break;
     case U8X8_MSG_BYTE_START_TRANSFER:
+      _glcd_msg_buffer_idx = 0;
       spiUnselect(GLCD_SPI_DRIVER);
       break;
     case U8X8_MSG_BYTE_END_TRANSFER:
+      spiSend(GLCD_SPI_DRIVER, _glcd_msg_buffer_idx, _glcd_msg_buffer);
       spiSelect(GLCD_SPI_DRIVER);
       break;
     default:
-    return 0;
+      return 0;
   }
   return 1;
 }
 
 static uint8_t _glcd_u8g2_gpio_and_delay(U8X8_UNUSED u8x8_t *u8x8, U8X8_UNUSED uint8_t msg, U8X8_UNUSED uint8_t arg_int, U8X8_UNUSED void *arg_ptr)
 {
-	switch(msg){
-		//Function to define the logic level of the RESET line
-		case U8X8_MSG_GPIO_RESET:
-			if (arg_int) palSetLine(GLCD_RESET_LINE);
-			else palClearLine(GLCD_RESET_LINE);
-			break;
-		default:
-			return 1;
-	}
+  switch(msg)
+  {
+  //Function to define the logic level of the RESET line
+    case U8X8_MSG_DELAY_NANO:
+      {
+        uint16_t i = 0;
+        for(i=0; i < arg_int; i++)
+                asm volatile("nop");
+      }
+      break;
+    case U8X8_MSG_GPIO_RESET:
+      if (arg_int) palSetLine(GLCD_RESET_LINE);
+      else palClearLine(GLCD_RESET_LINE);
+      break;
+    default:
+      return 1;
+  }
 
-	return 1; // command processed successfully.
+  return 1; // command processed successfully.
 }
 
 /*

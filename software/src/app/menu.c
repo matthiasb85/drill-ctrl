@@ -33,14 +33,19 @@
 /*
  * Forward declarations of static functions
  */
-static void _menu_init_module      (void);
-static void _menu_set_object_dirty (ui_object_t * object);
+static void          _menu_init_module      (void);
+static void          _menu_set_object_dirty (ui_object_t * object);
+static void          _menu_set_focus        (ui_object_t * object);
+static void          _menu_switch_object    (ui_object_t * old_object, ui_object_t * new_object);
+static ui_object_t * _menu_m2_run_cb        (inc_enc_rot_event_t event);
+static ui_object_t * _menu_m2_settings_cb   (inc_enc_rot_event_t event);
+static ui_object_t * _menu_m2_setpoint_cb   (inc_enc_rot_event_t event);
 
 /*
  * Static variables
  */
-static ui_object_t * _menu_current_focus_object = NULL;
-
+static ui_object_t *    _menu_current_focus_object = NULL;
+static MENU_SYS_STATE_T _menu_current_system_state = MENU_SSTATE_INIT;
 /*
  * Greeting screen
  */
@@ -69,15 +74,15 @@ static ui_object_value_t  _menu_m2_vrpm      = { .type = UI_KV_TYPE_UINT,  .font
 static ui_object_value_t  _menu_m2_vcurrent  = { .type = UI_KV_TYPE_FLOAT, .font = u8g2_font_6x12_mr, .fmt = "%2.2f", .value = &drill_ctrl_current };
 
 
-static ui_object_t _menu_m2_9 = { .class = UI_OBJECT_VALUE, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL, .x_pos = 79, .y_pos = 58, .content = &_menu_m2_vcurrent,  .next = NULL };
-static ui_object_t _menu_m2_8 = { .class = UI_OBJECT_VALUE, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL, .x_pos = 79, .y_pos = 31, .content = &_menu_m2_vrpm,      .next = &_menu_m2_9 };
-static ui_object_t _menu_m2_7 = { .class = UI_OBJECT_VALUE, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL, .x_pos = 15, .y_pos = 31, .content = &_menu_m2_vsetpoint, .next = &_menu_m2_8 };
-static ui_object_t _menu_m2_6 = { .class = UI_OBJECT_T_BOX, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL, .x_pos = 65, .y_pos = 38, .content = &_menu_m2_current,   .next = &_menu_m2_7 };
-static ui_object_t _menu_m2_5 = { .class = UI_OBJECT_T_BOX, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL, .x_pos = 65, .y_pos = 10, .content = &_menu_m2_rpm,       .next = &_menu_m2_6 };
-static ui_object_t _menu_m2_4 = { .class = UI_OBJECT_T_BOX, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL, .x_pos = 0,  .y_pos = 52, .content = &_menu_m2_settings,  .next = &_menu_m2_5 };
-static ui_object_t _menu_m2_3 = { .class = UI_OBJECT_T_BOX, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL, .x_pos = 0,  .y_pos = 38, .content = &_menu_m2_run,       .next = &_menu_m2_4 };
-static ui_object_t _menu_m2_2 = { .class = UI_OBJECT_T_BOX, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL, .x_pos = 0,  .y_pos = 10, .content = &_menu_m2_setpoint,  .next = &_menu_m2_3 };
-static ui_object_t _menu_m2_1 = { .class = UI_OBJECT_VALUE, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL, .x_pos = 35, .y_pos = 8,  .content = &_menu_m2_head,      .next = &_menu_m2_2 };
+static ui_object_t _menu_m2_9 = { .class = UI_OBJECT_VALUE, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL,                 .x_pos = 79, .y_pos = 58, .content = &_menu_m2_vcurrent,  .next = NULL };
+static ui_object_t _menu_m2_8 = { .class = UI_OBJECT_VALUE, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL,                 .x_pos = 79, .y_pos = 31, .content = &_menu_m2_vrpm,      .next = &_menu_m2_9 };
+static ui_object_t _menu_m2_7 = { .class = UI_OBJECT_VALUE, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL,                 .x_pos = 15, .y_pos = 31, .content = &_menu_m2_vsetpoint, .next = &_menu_m2_8 };
+static ui_object_t _menu_m2_6 = { .class = UI_OBJECT_T_BOX, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL,                 .x_pos = 65, .y_pos = 38, .content = &_menu_m2_current,   .next = &_menu_m2_7 };
+static ui_object_t _menu_m2_5 = { .class = UI_OBJECT_T_BOX, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL,                 .x_pos = 65, .y_pos = 10, .content = &_menu_m2_rpm,       .next = &_menu_m2_6 };
+static ui_object_t _menu_m2_4 = { .class = UI_OBJECT_T_BOX, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = _menu_m2_settings_cb, .x_pos = 0,  .y_pos = 52, .content = &_menu_m2_settings,  .next = &_menu_m2_5 };
+static ui_object_t _menu_m2_3 = { .class = UI_OBJECT_T_BOX, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = _menu_m2_run_cb,      .x_pos = 0,  .y_pos = 38, .content = &_menu_m2_run,       .next = &_menu_m2_4 };
+static ui_object_t _menu_m2_2 = { .class = UI_OBJECT_T_BOX, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = _menu_m2_setpoint_cb, .x_pos = 0,  .y_pos = 10, .content = &_menu_m2_setpoint,  .next = &_menu_m2_3 };
+static ui_object_t _menu_m2_1 = { .class = UI_OBJECT_VALUE, .state = UI_STATE_DIRTY, .mode = UI_MODE_NONE, .cb = NULL,                 .x_pos = 35, .y_pos = 8,  .content = &_menu_m2_head,      .next = &_menu_m2_2 };
 
 /*
  * Tasks
@@ -95,7 +100,8 @@ static void _menu_init_hal(void)
 
 static void _menu_init_module(void)
 {
-
+  _menu_m2_3.mode = UI_MODE_FOCUS;
+  _menu_set_focus(&_menu_m2_3);
 }
 
 static void _menu_set_object_dirty(ui_object_t * object)
@@ -103,9 +109,75 @@ static void _menu_set_object_dirty(ui_object_t * object)
   object->state = UI_STATE_DIRTY;
 }
 
+static void _menu_set_focus(ui_object_t * object)
+{
+  chSysLock();
+  _menu_current_focus_object = object;
+  chSysUnlock();
+}
+
+static void _menu_switch_object(ui_object_t * old_object, ui_object_t * new_object)
+{
+  old_object->mode =  UI_MODE_NONE;
+  old_object->state = UI_STATE_DIRTY;
+  new_object->mode =  UI_MODE_FOCUS;
+  new_object->state = UI_STATE_DIRTY;
+  _menu_set_focus(new_object);
+}
+
 /*
  * Callback functions
  */
+static ui_object_t * _menu_m2_run_cb(inc_enc_rot_event_t event)
+{
+  switch(event)
+  {
+    case INC_ENC_EVENT_BTN:
+    case INC_ENC_EVENT_CW:
+      _menu_switch_object(MENU_M2_RUN, MENU_M2_SETTINGS);
+      break;
+    case INC_ENC_EVENT_CCW:
+      _menu_switch_object(MENU_M2_RUN, MENU_M2_SETPOINT);
+      break;
+    default:
+      break;
+  }
+  return MENU_ENTRY_SCREEN;
+}
+
+static ui_object_t * _menu_m2_settings_cb(inc_enc_rot_event_t event)
+{
+  switch(event)
+  {
+    case INC_ENC_EVENT_BTN:
+    case INC_ENC_EVENT_CW:
+      _menu_switch_object(MENU_M2_SETTINGS, MENU_M2_SETPOINT);
+      break;
+    case INC_ENC_EVENT_CCW:
+      _menu_switch_object(MENU_M2_SETTINGS, MENU_M2_RUN);
+      break;
+    default:
+      break;
+  }
+  return MENU_ENTRY_SCREEN;
+}
+
+static ui_object_t * _menu_m2_setpoint_cb(inc_enc_rot_event_t event)
+{
+  switch(event)
+  {
+    case INC_ENC_EVENT_BTN:
+    case INC_ENC_EVENT_CW:
+      _menu_switch_object(MENU_M2_SETPOINT, MENU_M2_RUN);
+      break;
+    case INC_ENC_EVENT_CCW:
+      _menu_switch_object(MENU_M2_SETPOINT, MENU_M2_SETTINGS);
+      break;
+    default:
+      break;
+  }
+  return MENU_ENTRY_SCREEN;
+}
 
 /*
  * Shell functions
@@ -138,16 +210,24 @@ void menu_update_setpoint(void)
 
 ui_object_t * menu_get_greeting_screen(void)
 {
-  return &_menu_m1_1;
+  return MENU_GREETING_SCREEN;
 }
 
 ui_object_t * menu_get_entry_screen(void)
 {
-  return &_menu_m2_1;
+  return MENU_ENTRY_SCREEN;
 }
 
 ui_object_t * menu_get_focus_object(void)
 {
   return _menu_current_focus_object;
+}
+
+MENU_SYS_STATE_T menu_get_sys_state(void)
+{
+  chSysLock();
+  MENU_SYS_STATE_T ret = _menu_current_system_state;
+  chSysUnlock();
+  return ret;
 }
 

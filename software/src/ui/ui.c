@@ -58,13 +58,13 @@ static __attribute__((noreturn)) THD_FUNCTION(_ui_thread, arg)
   chEvtRegister(&inc_enc_events_src[INC_ENC_EVENT_CCW], &event_listener[INC_ENC_EVENT_CCW], INC_ENC_EVENT_CCW);
 
 
-  chThdSleepMilliseconds(2*GLCD_UPDATE_THREAD_P_MS);
+  chThdSleepMilliseconds(GLCD_UPDATE_THREAD_P_MS);
   _ui_current_object_list = menu_get_greeting_screen();
   glcd_set_object_list(_ui_current_object_list);
   chThdSleepMilliseconds(2000);
 
   glcd_set_object_list(NULL);
-  chThdSleepMilliseconds(2*GLCD_UPDATE_THREAD_P_MS);
+  chThdSleepMilliseconds(GLCD_UPDATE_THREAD_P_MS);
   _ui_current_object_list = menu_get_entry_screen();
   glcd_set_object_list(_ui_current_object_list);
 

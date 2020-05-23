@@ -82,7 +82,7 @@ static uint32_t _rev_get_dT(void)
 static void _rev_cnt_period_cb(ICUDriver *icup)
 {
   chSysLockFromISR();
-  _rev_cnt_last_dT = icuGetPeriodX(icup);
+  _rev_cnt_last_dT = _rev_cnt_last_dT/2 + icuGetPeriodX(icup)/2;
   chSysUnlockFromISR();
 }
 

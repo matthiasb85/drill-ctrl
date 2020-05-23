@@ -222,7 +222,6 @@ CSRC = $(ALLCSRC) \
        src/main.c \
        src/app/drill_ctrl.c \
        src/app/usb_shell.c \
-       src/app/ctrl_loop.c \
        src/app/menu.c \
        src/ch/usb_cfg.c \
        src/output/esc_pwm.c \

@@ -23,7 +23,6 @@
  * Include dependencies
  */
 #include "app/drill_ctrl_cmd.h"
-#include "app/ctrl_loop_cmd.h"
 #include "output/esc_pwm_cmd.h"
 #include "sensors/pwr_sup_cmd.h"
 #include "sensors/rev_cnt_cmd.h"
