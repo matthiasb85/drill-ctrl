@@ -87,11 +87,8 @@ static __attribute__((noreturn)) THD_FUNCTION(_glcd_update_thread, arg)
   chRegSetThreadName("glcd_update");
   chThdSleepMilliseconds(GLCD_UPDATE_THREAD_P_MS);
 
-  palSetLineMode(PAL_LINE(GPIOA, 9U),PAL_MODE_OUTPUT_PUSHPULL);
-
   while (true)
   {
-    palSetLine(PAL_LINE(GPIOA, 9U));
     systime_t time = chVTGetSystemTimeX();
 
     if(_glcd_process_objects())
@@ -100,7 +97,6 @@ static __attribute__((noreturn)) THD_FUNCTION(_glcd_update_thread, arg)
       u8g2_SendBuffer(&_glcd_u8g2);
       spiReleaseBus(GLCD_SPI_DRIVER);
     }
-    palClearLine(PAL_LINE(GPIOA, 9U));
     chThdSleepUntilWindowed(time, time + TIME_MS2I(GLCD_UPDATE_THREAD_P_MS));
   }
 }
