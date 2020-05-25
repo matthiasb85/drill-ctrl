@@ -205,9 +205,15 @@ void drill_ctrl_init(void)
    */
 }
 
-void drill_ctrl_change_set_point(uint32_t new_set_point)
+void drill_ctrl_change_set_point(int32_t inc)
 {
+  int32_t new_setpoint = (drill_ctrl_set_point + inc > DRILL_CTRL_MAX_SETPOINT) ?
+      DRILL_CTRL_MAX_SETPOINT :
+      (drill_ctrl_set_point + inc < DRILL_CTRL_MIN_SETPOINT) ?
+          DRILL_CTRL_MIN_SETPOINT :
+          drill_ctrl_set_point + inc;
+
   chSysLockFromISR();
-  drill_ctrl_set_point = new_set_point;
+  drill_ctrl_set_point = new_setpoint;
   chSysUnlockFromISR();
 }

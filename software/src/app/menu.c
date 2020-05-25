@@ -36,7 +36,10 @@
 static void          _menu_init_module      (void);
 static void          _menu_set_object_dirty (ui_object_t * object);
 static void          _menu_set_focus        (ui_object_t * object);
+static void          _menu_set_object_mode  (ui_object_t * object, ui_object_mode_t new_mode);
 static void          _menu_switch_object    (ui_object_t * old_object, ui_object_t * new_object);
+static void          _menu_change_setpoint  (inc_enc_rot_event_t event);
+static void          _menu_set_sys_state    (MENU_SYS_STATE_T new_state);
 static ui_object_t * _menu_m2_run_cb        (inc_enc_rot_event_t event);
 static ui_object_t * _menu_m2_settings_cb   (inc_enc_rot_event_t event);
 static ui_object_t * _menu_m2_setpoint_cb   (inc_enc_rot_event_t event);
@@ -100,8 +103,8 @@ static void _menu_init_hal(void)
 
 static void _menu_init_module(void)
 {
-  _menu_m2_3.mode = UI_MODE_FOCUS;
-  _menu_set_focus(&_menu_m2_3);
+  _menu_set_focus(MENU_M2_RUN);
+  _menu_set_object_mode(MENU_M2_RUN, UI_MODE_FOCUS);
 }
 
 static void _menu_set_object_dirty(ui_object_t * object)
@@ -116,13 +119,42 @@ static void _menu_set_focus(ui_object_t * object)
   chSysUnlock();
 }
 
+static void _menu_set_object_mode(ui_object_t * object, ui_object_mode_t new_mode)
+{
+  object->mode = new_mode;
+  _menu_set_object_dirty(object);
+}
+
 static void _menu_switch_object(ui_object_t * old_object, ui_object_t * new_object)
 {
-  old_object->mode =  UI_MODE_NONE;
-  old_object->state = UI_STATE_DIRTY;
-  new_object->mode =  UI_MODE_FOCUS;
-  new_object->state = UI_STATE_DIRTY;
+  _menu_set_object_mode(old_object, UI_MODE_NONE);
+  _menu_set_object_mode(new_object, UI_MODE_FOCUS);
   _menu_set_focus(new_object);
+}
+
+static void _menu_change_setpoint(inc_enc_rot_event_t event)
+{
+  switch(event)
+  {
+    case INC_ENC_EVENT_CW:
+      drill_ctrl_change_set_point(+10);
+      MENU_M2_VSETPOINT->state = UI_STATE_DIRTY;
+      break;
+    case INC_ENC_EVENT_CCW:
+      drill_ctrl_change_set_point(-10);
+      MENU_M2_VSETPOINT->state = UI_STATE_DIRTY;
+      break;
+    case INC_ENC_EVENT_BTN:
+    default:
+      break;
+  }
+}
+
+static void _menu_set_sys_state(MENU_SYS_STATE_T new_state)
+{
+  chSysLock();
+  _menu_current_system_state = new_state;
+  chSysUnlock();
 }
 
 /*
@@ -133,11 +165,35 @@ static ui_object_t * _menu_m2_run_cb(inc_enc_rot_event_t event)
   switch(event)
   {
     case INC_ENC_EVENT_BTN:
+      if (MENU_M2_SETPOINT->mode == UI_MODE_ACTIVE)
+      {
+        _menu_set_object_mode(MENU_M2_SETPOINT, UI_MODE_NONE);
+        _menu_set_object_mode(MENU_M2_VSETPOINT, UI_MODE_NONE);
+        _menu_set_object_mode(MENU_M2_RUN, UI_MODE_FOCUS);
+        _menu_set_sys_state(MENU_SSTATE_INIT);
+      }
+      else
+      {
+        _menu_set_object_mode(MENU_M2_RUN, UI_MODE_ACTIVE);
+        _menu_set_object_mode(MENU_M2_SETPOINT, UI_MODE_ACTIVE);
+        _menu_set_object_mode(MENU_M2_VSETPOINT, UI_MODE_ACTIVE);
+        _menu_set_sys_state(MENU_SSTATE_RUNNING);
+      }
+      break;
     case INC_ENC_EVENT_CW:
-      _menu_switch_object(MENU_M2_RUN, MENU_M2_SETTINGS);
+      if (MENU_M2_RUN->mode == UI_MODE_ACTIVE)
+        _menu_change_setpoint(event);
+      else
+        _menu_switch_object(MENU_M2_RUN, MENU_M2_SETTINGS);
       break;
     case INC_ENC_EVENT_CCW:
-      _menu_switch_object(MENU_M2_RUN, MENU_M2_SETPOINT);
+      if (MENU_M2_RUN->mode == UI_MODE_ACTIVE)
+        _menu_change_setpoint(event);
+      else
+      {
+        _menu_switch_object(MENU_M2_RUN, MENU_M2_SETPOINT);
+        _menu_set_object_mode(MENU_M2_VSETPOINT, UI_MODE_NONE);
+      }
       break;
     default:
       break;
@@ -150,8 +206,10 @@ static ui_object_t * _menu_m2_settings_cb(inc_enc_rot_event_t event)
   switch(event)
   {
     case INC_ENC_EVENT_BTN:
+      break;
     case INC_ENC_EVENT_CW:
       _menu_switch_object(MENU_M2_SETTINGS, MENU_M2_SETPOINT);
+      _menu_set_object_mode(MENU_M2_VSETPOINT, UI_MODE_NONE);
       break;
     case INC_ENC_EVENT_CCW:
       _menu_switch_object(MENU_M2_SETTINGS, MENU_M2_RUN);
@@ -167,11 +225,34 @@ static ui_object_t * _menu_m2_setpoint_cb(inc_enc_rot_event_t event)
   switch(event)
   {
     case INC_ENC_EVENT_BTN:
+      if (MENU_M2_SETPOINT->mode == UI_MODE_ACTIVE)
+      {
+        _menu_set_object_mode(MENU_M2_SETPOINT, UI_MODE_FOCUS);
+        _menu_set_object_mode(MENU_M2_VSETPOINT, UI_MODE_NONE);
+      }
+      else
+      {
+        _menu_set_object_mode(MENU_M2_SETPOINT, UI_MODE_ACTIVE);
+        _menu_set_object_mode(MENU_M2_VSETPOINT, UI_MODE_ACTIVE);
+      }
+      break;
     case INC_ENC_EVENT_CW:
-      _menu_switch_object(MENU_M2_SETPOINT, MENU_M2_RUN);
+      if (MENU_M2_SETPOINT->mode == UI_MODE_ACTIVE)
+        _menu_change_setpoint(event);
+      else
+      {
+        _menu_switch_object(MENU_M2_SETPOINT, MENU_M2_RUN);
+        _menu_set_object_mode(MENU_M2_VSETPOINT, UI_MODE_NONE);
+      }
       break;
     case INC_ENC_EVENT_CCW:
-      _menu_switch_object(MENU_M2_SETPOINT, MENU_M2_SETTINGS);
+      if (MENU_M2_SETPOINT->mode == UI_MODE_ACTIVE)
+        _menu_change_setpoint(event);
+      else
+      {
+        _menu_switch_object(MENU_M2_SETPOINT, MENU_M2_SETTINGS);
+        _menu_set_object_mode(MENU_M2_VSETPOINT, UI_MODE_NONE);
+      }
       break;
     default:
       break;
@@ -195,17 +276,17 @@ void menu_init(void)
 
 void menu_update_current(void)
 {
-  _menu_set_object_dirty(&_menu_m2_9);
+  _menu_set_object_dirty(MENU_M2_VCURRENT);
 }
 
 void menu_update_rpm(void)
 {
-  _menu_set_object_dirty(&_menu_m2_8);
+  _menu_set_object_dirty(MENU_M2_VRPM);
 }
 
 void menu_update_setpoint(void)
 {
-  _menu_set_object_dirty(&_menu_m2_7);
+  _menu_set_object_dirty(MENU_M2_VSETPOINT);
 }
 
 ui_object_t * menu_get_greeting_screen(void)
