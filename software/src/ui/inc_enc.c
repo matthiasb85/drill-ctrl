@@ -44,7 +44,8 @@ static void             _inc_enc_cb_rot         (void *arg);
  * Static variables
  */
 static inc_enc_rot_state_t      _inc_enc_rot_state = INC_ENC_FSM_INIT;
-static virtual_timer_t          _inc_enc_debounce_vtp;
+static virtual_timer_t          _inc_enc_debounce_rot_vtp;
+static virtual_timer_t          _inc_enc_debounce_btn_vtp;
 static virtual_timer_t          _inc_enc_timeout_vtp;
 
 /*
@@ -71,7 +72,8 @@ static void _inc_enc_init_module(void)
   chEvtObjectInit(&inc_enc_events_src[INC_ENC_EVENT_CW]);
   chEvtObjectInit(&inc_enc_events_src[INC_ENC_EVENT_CCW]);
 
-  chVTObjectInit(&_inc_enc_debounce_vtp);
+  chVTObjectInit(&_inc_enc_debounce_rot_vtp);
+  chVTObjectInit(&_inc_enc_debounce_btn_vtp);
   chVTObjectInit(&_inc_enc_timeout_vtp);
 
   _inc_enc_reset_fsm();
@@ -89,7 +91,7 @@ static void _inc_enc_reset_fsm(void)
 
   _inc_enc_rot_state = INC_ENC_FSM_WF_RESET;
 
-  chVTSetI(&_inc_enc_debounce_vtp,
+  chVTSetI(&_inc_enc_debounce_rot_vtp,
            TIME_MS2I(INC_ENC_DEB_T_ROT),
            _inc_enc_debounce,
            (void *)((1 << INC_ENC_IMPL_CW) | (1 << INC_ENC_IMPL_CCW)));
@@ -125,7 +127,7 @@ static void _inc_enc_cb_btn(void *arg)
 
   palEnableLineEventI(INC_ENC_BTN_LINE, INC_ENC_IMPL_E_PAUSED);
 
-  chVTSetI(&_inc_enc_debounce_vtp,
+  chVTSetI(&_inc_enc_debounce_btn_vtp,
            TIME_MS2I(INC_ENC_DEB_T_BTN),
            _inc_enc_debounce,
            (void *)(1 << INC_ENC_IMPL_BTN));
