@@ -8,6 +8,11 @@
 #ifndef INC_OUTPUT_ESC_PWM_TYPES_H_
 #define INC_OUTPUT_ESC_PWM_TYPES_H_
 
+typedef enum {
+  ESC_PWM_DIR_FORWARD = 0,
+  ESC_PWM_DIR_REVERSE
+}esc_pwm_direction_t;
+
 #if ESC_PWM_TIMER_CH == 1
 #define ESC_PWM_CHANNEL_CFG \
    {PWM_OUTPUT_ACTIVE_HIGH, NULL}, \

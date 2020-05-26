@@ -59,6 +59,8 @@ static void _esc_pwm_init_hal(void)
 {
   pwmStart(ESC_PWM_TIMER_DRIVER, &_esc_pwm_pwmd_cfg);
   palSetLineMode(ESC_PWM_OUTPUT_LINE, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
+  palSetLineMode(ESC_PWM_DIRECTION_LINE, PAL_MODE_OUTPUT_PUSHPULL);
+  esc_pwm_set_direction(ESC_PWM_DIR_FORWARD);
   _esc_pwm_set_duty_cycle(0);
 }
 
@@ -130,3 +132,12 @@ void esc_pwm_set_output(uint32_t value)
   _esc_pwm_set_duty_cycle(value);
 }
 
+void esc_pwm_set_direction(esc_pwm_direction_t direction)
+{
+  switch(direction)
+  {
+    case ESC_PWM_DIR_FORWARD:   palClearLine(ESC_PWM_DIRECTION_LINE); break;
+    case ESC_PWM_DIR_REVERSE:   palSetLine  (ESC_PWM_DIRECTION_LINE); break;
+    default:                                                          break;
+  }
+}

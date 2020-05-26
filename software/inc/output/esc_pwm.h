@@ -13,5 +13,6 @@
 
 extern void esc_pwm_init(void);
 extern void esc_pwm_set_output(uint32_t);
+extern void esc_pwm_set_direction(esc_pwm_direction_t);
 
 #endif /* INC_OUTPUT_ESC_PWM_H_ */
