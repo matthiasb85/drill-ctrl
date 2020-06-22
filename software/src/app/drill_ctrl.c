@@ -25,7 +25,7 @@
 #include "app/usb_shell.h"
 #include "app/menu.h"
 #include "output/esc_pwm.h"
-#include "sensors/pwr_sup.h"
+#include "sensors/cur_adc.h"
 #include "sensors/rev_cnt.h"
 #include "ui/glcd.h"
 #include "ui/inc_enc.h"
@@ -72,7 +72,7 @@ static __attribute__((noreturn)) THD_FUNCTION(_drill_ctrl_main_thread, arg)
     chSysLock();
     uint32_t  set_point = drill_ctrl_set_point;
     drill_ctrl_rpm      = rev_get_rpm();
-    drill_ctrl_current  = 0.0; //pwr_sup_get_current();
+    drill_ctrl_current  = cur_adc_get_amp();
     chSysUnlock();
 
     uint32_t output = _drill_ctrl_loop_step(
@@ -180,7 +180,7 @@ void drill_ctrl_init(void)
    * Project specific driver initialization
    */
   esc_pwm_init();
-//  pwr_sup_init();drill_ctrl_init
+  cur_adc_init();
   rev_cnt_init();
   glcd_init();
   inc_enc_init();

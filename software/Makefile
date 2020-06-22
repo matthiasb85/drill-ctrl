@@ -225,6 +225,7 @@ CSRC = $(ALLCSRC) \
        src/app/menu.c \
        src/ch/usb_cfg.c \
        src/output/esc_pwm.c \
+       src/sensors/cur_adc.c \
        src/sensors/rev_cnt.c \
        src/ui/glcd.c \
        src/ui/inc_enc.c \

@@ -32,7 +32,7 @@
  */
 static void             _rev_cnt_init_hal       (void);
 static void             _rev_cnt_init_module    (void);
-static uint32_t         _rev_get_dT             (void);
+static uint32_t         _rev_cnt_get_dT         (void);
 static void             _rev_cnt_period_cb      (ICUDriver *icup);
 static void             _rev_cnt_overflow_cb    (ICUDriver *icup);
 
@@ -68,7 +68,7 @@ static void _rev_cnt_init_module(void)
    */
 }
 
-static uint32_t _rev_get_dT(void)
+static uint32_t _rev_cnt_get_dT(void)
 {
   chSysLockFromISR();
   uint32_t ret = (uint32_t)_rev_cnt_last_dT;
@@ -109,7 +109,7 @@ void rev_cnt_read_input(BaseSequentialStream *chp, int argc, char *argv[]) {
   chprintf(chp, "--------------------\r\n");
   while (chnGetTimeout((BaseChannel *)chp, TIME_IMMEDIATE) == Q_TIMEOUT)
   {
-      uint32_t dT = _rev_get_dT();
+      uint32_t dT = _rev_cnt_get_dT();
       uint32_t rpm = rev_get_rpm();
       chprintf(chp, " %8d | %8d\r", dT/(REV_CNT_TIMER_FREQ/1000), rpm);
       chThdSleepMilliseconds(100);
@@ -129,7 +129,7 @@ void rev_cnt_init(void)
 
 uint32_t rev_get_rpm(void)
 {
-  uint32_t dT = _rev_get_dT();
+  uint32_t dT = _rev_cnt_get_dT();
   uint32_t rpm = (dT > 0) ?
       (uint32_t)((60/REV_CNT_IMPL_P_REV)*((float)REV_CNT_TIMER_FREQ)/((float)dT)) :
       0 ;

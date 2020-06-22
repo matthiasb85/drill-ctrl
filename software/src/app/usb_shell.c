@@ -24,7 +24,7 @@
  */
 #include "app/drill_ctrl_cmd.h"
 #include "output/esc_pwm_cmd.h"
-#include "sensors/pwr_sup_cmd.h"
+#include "sensors/cur_adc_cmd.h"
 #include "sensors/rev_cnt_cmd.h"
 #include "ui/glcd_cmd.h"
 #include "ui/inc_enc_cmd.h"
@@ -45,7 +45,7 @@ static void     _usb_shell_init_module  (void);
 static const ShellCommand _usb_shell_cmds[] = {
   DRILL_CTRL_CMD_LIST
   ESC_PWM_CMD_LIST
-  PWR_SUP_CMD_LIST
+  CUR_ADC_CMD_LIST
   REV_CNT_CMD_LIST
   GLCD_CMD_LIST
   INC_ENC_CMD_LIST
