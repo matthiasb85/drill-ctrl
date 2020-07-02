@@ -19,6 +19,6 @@ extern void cur_adc_read_input(BaseSequentialStream *chp, int argc, char *argv[]
  * for module cur_adc
  */
 #define CUR_ADC_CMD_LIST \
-    {"rcurrent_read", cur_adc_read_input}, \
+    {"current_read", cur_adc_read_input}, \
 
 #endif /* INC_SENSORS_CUR_ADC_CMD_H_ */
