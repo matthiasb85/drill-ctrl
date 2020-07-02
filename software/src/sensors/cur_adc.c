@@ -44,12 +44,13 @@ static const ADCConversionGroup _cur_adc_cfg = {
   1,
   _cur_adc_finish_measurement_cb,
   NULL,
-  0, 0,                         /* CR1, CR2 */
-  ADC_SMPR1_SMP_AN10(ADC_SAMPLE_13P5),
-  0,                            /* SMPR2 */
-  ADC_SQR1_NUM_CH(1),
-  0,                            /* SQR2 */
-  ADC_SQR3_SQ1_N(CUR_ADC_CHANNEL)
+  0,                                    /* CR1 */
+  ADC_CR2_EXTSEL_SWSTART,               /* CR2 */
+  0,                                    /* SMPR1 */
+  ADC_SMPR2_SMP_AN0(ADC_SAMPLE_1P5),    /* SMPR2 */
+  0,                                    /* SQR1 */
+  0,                                    /* SQR2 */
+  ADC_SQR3_SQ1_N(CUR_ADC_CHANNEL)       /* SQR3 */
 };
 static virtual_timer_t          _cur_adc_start_measurement_vtp;
 static adcsample_t              _cur_adc_sample_shadow;
@@ -61,7 +62,7 @@ static uint32_t                 _cur_adc_sample;
 static void _cur_adc_init_hal(void)
 {
   palSetLineMode(CUR_ADC_INPUT_LINE, CUR_ADC_INPUT_MODE);
-  adcStart(CUR_ACD_DRIVER, NULL);
+  adcStart(CUR_ADC_DRIVER, NULL);
 }
 
 static void _cur_adc_init_module(void)
@@ -80,7 +81,7 @@ static uint32_t _cur_adc_get_raw(void)
 
 static void _cur_adc_start_measurement (void)
 {
-  adcStartConversionI(CUR_ACD_DRIVER, &_cur_adc_cfg, &_cur_adc_sample_shadow, 1);
+  adcStartConversionI(CUR_ADC_DRIVER, &_cur_adc_cfg, &_cur_adc_sample_shadow, 1);
 
   chVTSetI(&_cur_adc_start_measurement_vtp,
            TIME_MS2I(CUR_ADC_PERIOD_MS),
@@ -143,5 +144,5 @@ void cur_adc_init(void)
 float cur_adc_get_amp(void)
 {
   uint32_t raw = _cur_adc_get_raw();
-  return (float)(raw)/CUR_ADC_TICKS_PER_MV*CUR_ADC_A_PER_MV;
+  return (((float)(raw))*CUR_ADC_MV_PER_TICKS - CUR_ADC_OFFSET_IN_MV)*CUR_ADC_A_PER_MV;
 }
