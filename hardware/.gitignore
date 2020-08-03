@@ -25,3 +25,7 @@ fp-info-cache
 # Exported BOM files
 *.xml
 *.csv
+
+# FreeCAD backup
+*.fcstd1
+*.FCStd1
