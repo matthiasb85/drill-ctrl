@@ -35,22 +35,22 @@
  * Global variables
  */
 float            drill_ctrl_current     = 0.0;
-uint32_t         drill_ctrl_set_point   = 200;
-uint32_t         drill_ctrl_rpm         = 150;
+uint32_t         drill_ctrl_set_point   = DRILL_CTRL_DEFAULT_SETPOINT;
+uint32_t         drill_ctrl_rpm         = 0;
 
 /*
  * Forward declarations of static functions
  */
 static void             _drill_ctrl_init_module  (void);
-static uint32_t         _drill_ctrl_loop_step    (uint32_t set_point, uint32_t current_rpm);
+static uint32_t         _drill_ctrl_loop_step    (uint32_t set_point, uint32_t rpm_current, uint32_t output_old);
 /*
  * Static variables
  */
 
 static THD_WORKING_AREA(_drill_ctrl_main_stack, DRILL_CTRL_MAIN_THREAD_STACK);
-static float            _drill_ctrl_kP = 1.0;
-static float            _drill_ctrl_kI = 1.0;
-static float            _drill_ctrl_kD = 1.0;
+static const float      _drill_ctrl_kP = 2.5;
+static const float      _drill_ctrl_kI = 0.0;
+static const float      _drill_ctrl_kD = 0.0;
 
 /*
  * Tasks
@@ -62,6 +62,7 @@ static __attribute__((noreturn)) THD_FUNCTION(_drill_ctrl_main_thread, arg)
   float     current_old   = drill_ctrl_current;
   uint32_t  rpm_old       = drill_ctrl_rpm;
   uint32_t  set_point_old = drill_ctrl_set_point;
+  uint32_t  output_old    = 0;
 
   chRegSetThreadName("drill_ctrl_main");
 
@@ -77,9 +78,10 @@ static __attribute__((noreturn)) THD_FUNCTION(_drill_ctrl_main_thread, arg)
 
     uint32_t output = _drill_ctrl_loop_step(
         (menu_get_sys_state() == MENU_SSTATE_RUNNING) ? set_point : 0,
-        drill_ctrl_rpm);
-    esc_pwm_set_output(output);
+        drill_ctrl_rpm,
+        output_old);
 
+    if(output_old    != output)             esc_pwm_set_output(output);
     if(current_old   != drill_ctrl_current) menu_update_current();
     if(rpm_old       != drill_ctrl_rpm)     menu_update_rpm();
     if(set_point_old != set_point)          menu_update_setpoint();
@@ -88,6 +90,7 @@ static __attribute__((noreturn)) THD_FUNCTION(_drill_ctrl_main_thread, arg)
     current_old   = drill_ctrl_current;
     rpm_old       = drill_ctrl_rpm;
     set_point_old = set_point;
+    output_old    = output;
     chSysUnlock();
 
     chThdSleepUntilWindowed(time, time + TIME_MS2I(DRILL_CTRL_MAIN_THREAD_P_MS));
@@ -104,7 +107,7 @@ static void _drill_ctrl_init_module(void)
                     DRILL_CTRL_MAIN_THREAD_PRIO, _drill_ctrl_main_thread, NULL);
 }
 
-static uint32_t  _drill_ctrl_loop_step(uint32_t set_point, uint32_t current_rpm)
+static uint32_t  _drill_ctrl_loop_step(uint32_t set_point, uint32_t rpm_current, uint32_t output_old)
 {
   static DRILL_CTRL_L_STATE_T loop_state = DRILL_CTRL_L_INIT;
   static float prev_err_p = 0.0;
@@ -112,40 +115,43 @@ static uint32_t  _drill_ctrl_loop_step(uint32_t set_point, uint32_t current_rpm)
   static float err_i = 0.0;
   float        err_d = 0.0;
 
-  uint32_t output = 0;
+  int32_t output = 0;
 
   if(set_point == 0 && loop_state != DRILL_CTRL_L_INIT)
   {
     loop_state = DRILL_CTRL_L_SDOWN;
   }
 
+  err_p = (set_point) ? (float)(set_point - rpm_current) : 0;
+  err_i = (set_point) ? (err_i + err_p) : 0;
+  err_d = (set_point) ? ((err_p - prev_err_p)/((float)(DRILL_CTRL_MAIN_THREAD_P_MS))) : 0;
+
   switch(loop_state)
   {
     case DRILL_CTRL_L_INIT:
-      output = DRILL_CTRL_MIN_ESC_OUTPUT;
-      loop_state = DRILL_CTRL_L_SUP;
+      if(set_point)
+      {
+        output = DRILL_CTRL_MIN_ESC_OUTPUT;
+        loop_state = DRILL_CTRL_L_SUP;
+      }
       break;
     case DRILL_CTRL_L_SUP:
       {
-        err_p = (float)(set_point - current_rpm);
-        uint32_t new_output = (uint32_t)(err_p*_drill_ctrl_kP);
-        output = (new_output < DRILL_CTRL_MIN_ESC_OUTPUT) ?
+        int32_t new_output = (int32_t)(err_p*_drill_ctrl_kP);
+        output = output_old + new_output;
+        output = (output < DRILL_CTRL_MIN_ESC_OUTPUT) ?
             DRILL_CTRL_MIN_ESC_OUTPUT :
-            new_output;
+            output;
         loop_state = DRILL_CTRL_L_RUN;
       }
       break;
     case DRILL_CTRL_L_RUN:
       {
-        err_p = (float)(set_point - current_rpm);
-        err_i = err_i + err_p;
-        err_d = (err_p - prev_err_p)/((float)(DRILL_CTRL_MAIN_THREAD_P_MS));
-
-        uint32_t new_output = (uint32_t)(err_p*_drill_ctrl_kP + err_i*_drill_ctrl_kI + err_d*_drill_ctrl_kD);
-
-        output = (new_output < DRILL_CTRL_MIN_ESC_OUTPUT) ?
+        int32_t new_output = (uint32_t)(err_p*_drill_ctrl_kP + err_i*_drill_ctrl_kI + err_d*_drill_ctrl_kD);
+        output = output_old + new_output;
+        output = (output < DRILL_CTRL_MIN_ESC_OUTPUT) ?
             DRILL_CTRL_MIN_ESC_OUTPUT :
-            new_output;
+            output;
       }
       break;
     case DRILL_CTRL_L_SDOWN:
@@ -158,7 +164,7 @@ static uint32_t  _drill_ctrl_loop_step(uint32_t set_point, uint32_t current_rpm)
 
   prev_err_p = err_p;
 
-  return output;
+  return (uint32_t)output;
 }
 
 /*

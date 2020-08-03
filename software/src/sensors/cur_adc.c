@@ -103,7 +103,7 @@ static void _cur_adc_finish_measurement_cb(ADCDriver *adcp)
 {
   (void)adcp;
   chSysLockFromISR();
-  _cur_adc_sample = (_cur_adc_sample_shadow/2) + (_cur_adc_sample/2);
+  _cur_adc_sample = (_cur_adc_sample_shadow*CUR_ADC_OLD_VAL_EMPH + _cur_adc_sample*CUR_ADC_NEW_VAL_EMPH)/(CUR_ADC_OLD_VAL_EMPH + CUR_ADC_OLD_VAL_EMPH);
   chSysUnlockFromISR();
 }
 

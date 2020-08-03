@@ -18,5 +18,7 @@
 #define CUR_ADC_MV_PER_TICKS    CUR_ADC_VREF_IN_MV/((float)(4096))
 #define CUR_ADC_OFFSET_IN_MV    ((float)(0.12))*CUR_ADC_VREF_IN_MV
 #define CUR_ADC_A_PER_MV        ((float)(0.025))
+#define CUR_ADC_OLD_VAL_EMPH    4
+#define CUR_ADC_NEW_VAL_EMPH    1
 
 #endif /* INC_SENSORS_CUR_ADC_CFG_H_ */

@@ -14,6 +14,8 @@
 #define REV_CNT_INPUT_MODE      PAL_MODE_INPUT_PULLDOWN
 #define REV_CNT_ICUD            (&ICUD1)
 #define REV_CNT_ICUD_CH         ICU_CHANNEL_1
+#define REV_CNT_OLD_VAL_EMPH    4
+#define REV_CNT_NEW_VAL_EMPH    1
 
 
 #endif /* INC_SENSORS_REV_CNT_CFG_H_ */
